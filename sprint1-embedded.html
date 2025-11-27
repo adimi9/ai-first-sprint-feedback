@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SCG AI-First Sprint Feedback Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #111827;
+    }
+    .dashboard-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+    .header {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      padding: 24px;
+      text-align: center;
+      color: white;
+    }
+    .header h1 {
+      font-size: 2.1rem; font-weight: 800; margin-bottom: 6px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.12);
+    }
+    .header p { font-size: 1rem; opacity: 0.95; }
+    .content { padding: 22px; }
+
+    /* Metrics */
+    .metrics-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px; margin-bottom: 24px;
+    }
+    .metric-card {
+      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      padding: 16px; border-radius: 14px; text-align: center;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    }
+    .metric-value { font-size: 2rem; font-weight: 800; color: #1f2937; }
+    .metric-label { font-size: 0.95rem; color: #4b5563; font-weight: 600; margin-top: 4px; }
+
+    /* Tab Navigation */
+    .tab-nav {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+
+    .tab-nav select.tab-btn {
+      appearance: none;
+      background-image: linear-gradient(45deg, transparent 50%, #9ca3af 50%), linear-gradient(135deg, #9ca3af 50%, transparent 50%), linear-gradient(to right, #e5e7eb, #e5e7eb);
+      background-position: calc(100% - 18px) calc(1.1em), calc(100% - 13px) calc(1.1em), calc(100% - 2.6em) 0.4em;
+      background-size: 6px 6px, 6px 6px, 1px 1.6em;
+      background-repeat: no-repeat;
+      padding-right: 2.8em;
+    }
+
+  
+    .tab-btn {
+      background: white;
+      border: 2px solid #e5e7eb;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #4b5563;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .tab-btn:hover {
+      background: #f9fafb;
+      border-color: #4facfe;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .tab-btn.active {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+      border-color: #4facfe;
+      box-shadow: 0 4px 16px rgba(79, 172, 254, 0.3);
+    }
+
+    /* Tab Content */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .section { margin-bottom: 28px; }
+    .section-title {
+      font-size: 1.4rem; font-weight: 800; margin-bottom: 12px; color: #111827;
+      border-left: 4px solid #4facfe; padding-left: 10px;
+    }
+
+    /* Team cards grid */
+    .team-comparison {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+    @media (max-width: 1200px) { .team-comparison { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px) { .team-comparison { grid-template-columns: 1fr; } }
+
+    /* Team card */
+    .team-card {
+      background: #ffffff;
+      border-radius: 16px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.06);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      padding: 14px;
+      height: 500px;
+      overflow: hidden;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .team-card:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(0,0,0,0.08); }
+    @media (max-width: 768px) { .team-card { height: auto; } }
+
+    /* Header */
+    .team-header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-rows: auto auto;
+      column-gap: 10px;
+      row-gap: 6px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #f1f5f9;
+      margin-bottom: 10px;
+    }
+    .team-title {
+      grid-column: 1 / 2;
+      grid-row: 1 / 3;               /* span both rows so it sits centered between the two pills */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;       /* vertical centering */
+      align-items: flex-start;
+      text-align: left;
+    }
+    .team-name { font-weight: 900; color: #0f172a; font-size: 1.05rem; line-height: 1.15; }
+    .responded-note { color: #6b7280; font-size: 0.84rem; margin-top: 3px; }
+
+    /* Right column: top = division, bottom = problem */
+    .header-right { 
+      grid-column: 2 / 3; 
+      display: contents;             /* let children occupy grid rows cleanly */
+    }
+    .header-division { grid-row: 1 / 2; justify-self: end; }
+    .header-problem  { grid-row: 2 / 3; justify-self: end; }
+
+    /* Pills */
+    .division-pill, .problem-pill {
+      align-self: start;
+      background:#e8f0ff; color:#1e40af; padding:6px 10px; border-radius:999px;
+      font-weight: 500; font-size: 0.82rem; white-space: nowrap;
+      border: 1px solid #cfe0ff;
+      display: inline-block;
+    }
+    .problem-pill {
+      background:#f0f9ff; color:#075985; border-color:#bae6fd;
+    }
+
+    /* Stack */
+    .stack { display: grid; gap: 12px; min-height: 0; overflow: auto; padding-right: 2px; }
+    .row { display: block; }
+    .label { color:#1f2937; font-weight: 800; font-size: 0.9rem; margin-bottom: 6px; }
+    .pill-group { display:flex; flex-wrap: wrap; gap: 6px; }
+
+    /* Data pills */
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 8px; border-radius: 999px; font-weight: 600;
+      font-size: 0.82rem;
+      border: 1px solid #E5E7EB; background: #F8FAFC; color: #111827;
+    }
+    .pill-green { background:#dcfce7; color:#166534; border-color:#bbf7d0; }
+    .pill-amber { background:#fef3c7; color:#92400e; border-color:#fde68a; }
+    .pill-red { background:#fee2e2; color:#991b1b; border-color:#fecaca; }
+    .pill-blue { background:#e0f2fe; color:#075985; border-color:#bae6fd; }
+    .pill-teal { background:#ccfbf1; color:#115e59; border-color:#99f6e4; }
+    .pill-rating-5 { background:#10b981; color:#fff; border-color:#10b981; }
+    .pill-rating-4 { background:#34d399; color:#064e3b; border-color:#34d399; }
+    .pill-rating-3 { background:#f59e0b; color:#fff; border-color:#f59e0b; }
+    .pill-soft { background:#fef3c7; color:#92400e; border-color:#fde68a; }
+
+    /* Member chips */
+    .mchip-card {
+      display:inline-flex; align-items:center; gap:4px; padding:3px 7px;
+      border-radius:12px; font-size:0.78rem; color:#0f172a;
+      border: 1px solid rgba(0,0,0,0.06);
+    }
+    .mchip {
+      display:inline-flex; align-items:center; gap:4px; padding:4px 8px;
+      border-radius:12px; font-size:0.78rem; font-weight: 600;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+
+    /* Tables */
+    .comparison-table {
+      background: white; border-radius: 15px; overflow: hidden;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.08); margin-bottom: 22px;
+    }
+    .table-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white; padding: 16px; font-size: 1.05rem; font-weight: 800;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7f0; vertical-align: top; }
+    th { background: #f8fafc; font-weight: 800; color: #1f2937; }
+    tr:hover { background: #f7fafc; }
+    .answer-block {
+      background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:6px 8px; margin:4px 0;
+    }
+    .answer-block .text { color:#111827; margin-bottom:4px; line-height:1.35; }
+
+    @media (max-width: 768px) {
+      .dashboard-container { margin: 10px; border-radius: 15px; }
+      .content { padding: 18px; }
+      .header { padding: 20px; }
+      .header h1 { font-size: 1.8rem; }
+      .metrics-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+      .team-card { height: auto; }
+      .row { grid-template-columns: 130px 1fr; }
+      .tab-nav { gap: 8px; }
+      .tab-btn { padding: 10px 16px; font-size: 0.85rem; }
+    }
+    /* Embedded mode - hide outer container and header */
+    body.embedded .dashboard-container { background: transparent; box-shadow: none; border-radius: 0; }
+    body.embedded .header { display: none; }
+    body.embedded body { background: transparent; padding: 0; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body class="embedded">
+<div class="dashboard-container">
+  <div class="header">
+    <h1>🚀 SCG AI-First Sprint 1 Feedback Dashboard</h1>
+    <p>Comprehensive analysis of team experiences and outcomes</p>
+  </div>
+
+  <div class="content">
+    <!-- Key Metrics -->
+    <div class="metrics-grid">
+      <div class="metric-card"><div class="metric-value" id="avg-rating">-</div><div class="metric-label">Average Rating</div></div>
+      <div class="metric-card"><div class="metric-value" id="total-responses">-</div><div class="metric-label">Total Responses</div></div>
+      <div class="metric-card"><div class="metric-value" id="continuation-rate">-</div><div class="metric-label">Continuation Rate (Yes)</div></div>
+      <div class="metric-card"><div class="metric-value" id="adoption-rate">-</div><div class="metric-label">Beyond Team Adoption</div></div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="tab-nav">
+      - <button class="tab-btn active" onclick="switchTab('overview')">📊 Team Overview</button>
+      <button class="tab-btn" onclick="switchTab('experience')">💡 Sprint Experience & Challenges</button>
+      <button class="tab-btn" onclick="switchTab('future')">🚀 Future Plans & Development</button>
+      <button class="tab-btn" onclick="switchTab('support')">🤝 Support Needs & Barriers</button>
+    </div>
+
+    <!-- Filters -->
+    <div id="filters" class="tab-nav" style="margin-bottom: 12px;">
+      <select id="filter-division" class="tab-btn" style="cursor: default;">
+        <option value="">All Divisions</option>
+      </select>
+      <select id="filter-problem" class="tab-btn" style="cursor: default;">
+        <option value="">All Problems</option>
+      </select>
+    </div>
+
+    <!-- Tab: Team Overview -->
+    <div id="tab-overview" class="tab-content active">
+      <div class="section">
+        <h2 class="section-title">📊 Team Overview</h2>
+        <div class="team-comparison" id="team-cards"></div>
+      </div>
+    </div>
+
+    <!-- Tab: Sprint Experience & Challenges -->
+    <div id="tab-experience" class="tab-content">
+      <div class="section">
+        <h2 class="section-title">💡 Sprint Experience & Challenges</h2>
+        <div class="comparison-table">
+          <div class="table-header">Sprint Experience & Challenges</div>
+          <table><thead><tr><th>Team</th><th>What Worked Best</th><th>Biggest Challenge</th><th>Suggestions for Improvement</th></tr></thead><tbody id="table-experience"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Future Plans & Development -->
+    <div id="tab-future" class="tab-content">
+      <div class="section">
+        <h2 class="section-title">🚀 Future Plans & Development</h2>
+        <div class="comparison-table">
+          <div class="table-header">Future Plans & Development</div>
+          <table><thead><tr><th>Team</th><th>Future Vision</th><th>Next Priority Steps</th><th>Timeline</th></tr></thead><tbody id="table-future"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Support Needs & Barriers -->
+    <div id="tab-support" class="tab-content">
+      <div class="section">
+        <h2 class="section-title">🤝 Support Needs & Barriers</h2>
+        <div class="comparison-table">
+          <div class="table-header">Support Needs & Barriers</div>
+          <table><thead><tr><th>Team</th><th>Support Needed</th><th>Biggest Barriers</th></tr></thead><tbody id="table-support"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+  <!-- Chatbot Widget -->
+<div id="chatbot-root" style="all: initial;"></div>
+<script>
+// Tab switching
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('tab-' + tabName).classList.add('active');
+  event.target.classList.add('active');
+}
+
+(function () {
+  const CSV_URL = 'Sprint 1 Feedback Form-68b904bdfedea2208c5b26ab.csv';
+  const HEADER_START = 'Response ID';
+
+  // Team headcount
+  const TEAM_HEADCOUNT = new Map([
+    ['AI', 2], ['AI AHA', 3], ['AI Can Do It', 2], ['AI Frontiers', 3],
+    ['AI Newcomer', 3], ['AI-YOYO', 3], ['Bright Bytes', 3],
+    ['DataSage Partners', 3], ["Dumbledore's Army", 2],
+    ['Fast & Curious – Ask more. Build faster.', 3],
+    ['Insight Out (ISO.AI)', 3], ['Insight Out 2 (ISO2.Ai)', 3],
+    ['Minute Makers', 3], ['OE Data Team 1', 3], ['OE Data Team 2', 2],
+    ['PEANUT (Partnerships & Engagement AI Navigation Unit Team)', 3],
+    ['ProcureLogic', 3], ['ProphAI$y', 2], ['Query Quester', 2],
+    ['ReADI (Real-time Analytics & Digital Intelligence)', 3],
+    ['SAGE', 2], ['SPD 1', 3], ['SumUpFollowUp', 2], ['T3 (Tender Tech Titans)', 3],
+    ['The Web Rangers', 2],
+  ]);
+
+  // Team -> Problem mapping (provided)
+  const TEAM_PROBLEM = new Map([
+    ['AI', 'Problem A'],
+    ['AI AHA', 'Problem C'],
+    ['AI Can Do It', 'Problem C'],
+    ['AI Frontiers', 'Problem C'],
+    ['AI Newcomer', 'Problem C'],
+    ['AI-YOYO', 'Problem B'],
+    ['Bright Bytes', 'Problem C'],
+    ['DataSage Partners', 'Problem C'],
+    ["Dumbledore's Army", 'Problem C'],
+    ['Fast & Curious – Ask more. Build faster.', 'Problem C'],
+    ['Insight Out (ISO.AI)', 'Problem C'],
+    ['Insight Out 2 (ISO2.Ai)', 'Problem B'],
+    ['Minute Makers', 'Problem A'],
+    ['OE Data Team 1', 'Problem C'],
+    ['OE Data Team 2', 'Problem C'],
+    ['PEANUT (Partnerships & Engagement AI Navigation Unit Team)', 'Problem A'],
+    ['ProcureLogic', 'Problem C'],
+    ['ProphAI$y', 'Problem C'],
+    ['Query Quester', 'Problem C'],
+    ['ReADI (Real-time Analytics & Digital Intelligence)', 'Problem C'],
+    ['SAGE', 'Problem C'],
+    ['SPD 1', 'Problem A'],
+    ['SumUpFollowUp', 'Problem B'],
+    ['T3 (Tender Tech Titans)', 'Problem C'],
+    ['The Web Rangers', 'Problem C'],
+  ]);
+
+  const COLS = {
+    id: 'Response ID',
+    ts: 'Timestamp',
+    team: 'Which Sprint team are you from?',
+    division: 'Which division are you from?',
+    rating: 'On a scale of 1-5, how would you rate your SCG AI-First Sprint Experience?',
+    worked: 'What worked best during the sprint process?',
+    challenge: 'What was the biggest challenge your team faced?',
+    better: 'Anything you would like us to do better for upcoming Sprints?',
+    adoption: 'How is the adoption of your solution?',
+    vision: 'Where do you envision taking your solution next?',
+    continue: 'Do you plan to continue working on this solution beyond the sprint?',
+    steps: 'What are your next 2-3 priority steps for development?',
+    timeline: 'What is your realistic timeline for moving forward?',
+    support: 'What type of support would be most valuable for advancing your solution? (Check all that apply)',
+    barriers: 'What are the biggest barriers you foresee in scaling or adopting your solution?',
+    followup: 'Would you be interested in ongoing check-ins or follow-up sessions?'
+  };
+
+  const el = (html) => { const t=document.createElement('template'); t.innerHTML=html.trim(); return t.content.firstChild; };
+  const txt = (v) => (v == null ? '' : String(v).trim());
+  const parseRating = (v) => { const n = Number(v); return Number.isFinite(n) ? n : null; };
+
+  // Member colors (for #1 #2 #3 chips)
+  const MEMBER_COLORS = [
+    '#FFCDD2', '#F8BBD0', '#E1BEE7', '#D1C4E9', '#C5CAE9',
+    '#BBDEFB', '#B3E5FC', '#B2EBF2', '#B2DFDB', '#C8E6C9',
+    '#DCEDC8', '#F0F4C3', '#FFF9C4', '#FFECB3', '#FFE0B2',
+    '#FFCCBC', '#D7CCC8', '#CFD8DC'
+  ];
+  const groupByTeam = (rows) => {
+    const map = new Map();
+    for (const r of rows) {
+      const team = txt(r[COLS.team]) || 'Unknown Team';
+      if (!map.has(team)) map.set(team, []);
+      map.get(team).push(r);
+    }
+    return map;
+  };
+  function memberColor(idx) { return MEMBER_COLORS[idx % MEMBER_COLORS.length]; }
+  function getTextColor(bgColor) {
+    const hex = bgColor.replace('#', '');
+    if (hex.length !== 6) return '#0f172a';
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > 155 ? '#0f172a' : '#ffffff';
+  }
+
+  function pillClassForContinue(value) {
+    const v = txt(value).toLowerCase();
+    if (v.startsWith('yes')) return 'pill-green';
+    if (v.startsWith('maybe')) return 'pill-amber';
+    if (v.startsWith('no')) return 'pill-red';
+    return 'pill-soft';
+  }
+  function pillClassForAdoption(value) {
+    const v = txt(value).toLowerCase();
+    if (!v) return 'pill-soft';
+    if (v.startsWith("i'll definitely")) return 'pill-teal';
+    if (v.startsWith('my immediate team')) return 'pill-blue';
+    if (v.startsWith('some people')) return 'pill-green';
+    if (v.startsWith('no one')) return 'pill-red';
+    return 'pill-soft';
+  }
+  function pillClassForFollowup(value) {
+    const v = txt(value).toLowerCase();
+    if (v === 'yes') return 'pill-green';
+    if (v === 'maybe') return 'pill-amber';
+    if (v === 'no') return 'pill-red';
+    return 'pill-teal';
+  }
+  function pillClassForRating(n) {
+    if (n >= 5) return 'pill-rating-5';
+    if (n >= 4) return 'pill-rating-4';
+    return 'pill-rating-3';
+  }
+
+  // Division + Problem pill helpers
+  function divisionPill(division) {
+    const d = txt(division) || '—';
+    return `<div class="division-pill" style="margin-top:8px;">${d}</div>`;
+  }
+  function problemPill(teamName) {
+    const problem = TEAM_PROBLEM.get(teamName) || '—';
+    return `<div class="problem-pill" style="margin-top:6px;">${problem}</div>`;
+  }
+
+  // Global state for filters
+  let RAW_ROWS = [];
+  let CURRENT_DIVISION = '';
+  let CURRENT_PROBLEM = '';
+
+  function getTeamDivision(teamRows) {
+    return txt(teamRows[0]?.[COLS.division]) || '—';
+  }
+  function getTeamProblem(teamName) {
+    return TEAM_PROBLEM.get(teamName) || '—';
+  }
+
+  // Apply filters and return filtered rows
+  function filterRows(rows) {
+    if (!CURRENT_DIVISION && !CURRENT_PROBLEM) return rows;
+    return rows.filter(r => {
+      const divOk = CURRENT_DIVISION ? txt(r[COLS.division]) === CURRENT_DIVISION : true;
+      const teamName = txt(r[COLS.team]) || 'Unknown Team';
+      const probOk = CURRENT_PROBLEM ? getTeamProblem(teamName) === CURRENT_PROBLEM : true;
+      return divOk && probOk;
+    });
+  }
+
+  // Sort teams by Division -> Problem -> Team
+  function sortTeamEntries(byTeam) {
+    return [...byTeam.entries()].sort((a, b) => {
+      const [teamA, rowsA] = a;
+      const [teamB, rowsB] = b;
+      const divA = getTeamDivision(rowsA);
+      const divB = getTeamDivision(rowsB);
+      if (divA !== divB) return divA.localeCompare(divB);
+      const probA = getTeamProblem(teamA);
+      const probB = getTeamProblem(teamB);
+      if (probA !== probB) return probA.localeCompare(probB);
+      return teamA.localeCompare(teamB);
+    });
+  }
+
+  // Populate filters based on data
+  function populateFilters(rows) {
+    const selDiv = document.getElementById('filter-division');
+    const selProb = document.getElementById('filter-problem');
+
+    // Divisions from raw rows
+    const divisions = Array.from(new Set(rows.map(r => txt(r[COLS.division])).filter(Boolean))).sort((a,b)=>a.localeCompare(b));
+
+    // Problems from TEAM_PROBLEM mapping (only for teams present in data)
+    const presentTeams = new Set(rows.map(r => txt(r[COLS.team])).filter(Boolean));
+    const problems = Array.from(new Set(
+      [...presentTeams].map(t => TEAM_PROBLEM.get(t) || '—')
+    )).sort((a,b)=>a.localeCompare(b));
+
+    // Clear and add options (keeping "All" on top)
+    function setOptions(selectEl, options) {
+      const current = selectEl.value;
+      selectEl.innerHTML = ''; // reset
+      const allOption = document.createElement('option');
+      allOption.value = '';
+      allOption.textContent = selectEl.id === 'filter-division' ? 'All Divisions' : 'All Problems';
+      selectEl.appendChild(allOption);
+      options.forEach(o => {
+        const opt = document.createElement('option');
+        opt.value = o;
+        opt.textContent = o;
+        selectEl.appendChild(opt);
+      });
+      // Preserve selection if still valid
+      const wanted = (selectEl.id === 'filter-division' ? CURRENT_DIVISION : CURRENT_PROBLEM);
+      if (wanted && options.includes(wanted)) selectEl.value = wanted;
+      else selectEl.value = '';
+    }
+
+    setOptions(selDiv, divisions);
+    setOptions(selProb, problems);
+  }
+
+  function render(rows) {
+    // Keep only valid rows
+    rows = rows.filter(r => txt(r[COLS.id]) && txt(r[COLS.team]));
+
+    // Save raw rows first time and whenever parsing completes
+    RAW_ROWS = rows;
+
+    // Populate filter select options from full data set
+    populateFilters(RAW_ROWS);
+
+    // Apply filters for displayed set
+    const filtered = filterRows(RAW_ROWS);
+
+    // Metrics
+    const ratings = filtered.map(r => parseRating(r[COLS.rating])).filter(n => n != null);
+    const avg = ratings.length ? (ratings.reduce((a,b)=>a+b,0)/ratings.length) : null;
+    const contYes = filtered.filter(r => txt(r[COLS.continue]).toLowerCase().startsWith('yes')).length;
+    const contRate = filtered.length ? Math.round((contYes / filtered.length) * 100) : null;
+    const adoptionPos = filtered.filter(r => {
+      const a = txt(r[COLS.adoption]).toLowerCase();
+      return a.startsWith('some people beyond') || a.startsWith('my division loves');
+    }).length;
+    const adoptionRate = filtered.length ? Math.round((adoptionPos / filtered.length) * 100) : null;
+    document.getElementById('avg-rating').textContent = avg != null ? `${(Math.round(avg * 10) / 10).toFixed(1)} / 5.0` : '-';
+
+    document.getElementById('total-responses').textContent = filtered.length;
+    document.getElementById('continuation-rate').textContent = contRate != null ? `${contRate}%` : '-';
+    document.getElementById('adoption-rate').textContent = adoptionRate != null ? `${adoptionRate}%` : '-';
+
+    // Team Overview cards
+    const byTeam = groupByTeam(filtered);
+    const teamCards = document.getElementById('team-cards');
+    teamCards.innerHTML = '';
+
+    const sortedTeams = sortTeamEntries(byTeam);
+
+    sortedTeams.forEach(([teamName, teamRows]) => {
+      const teamTotal = TEAM_HEADCOUNT.get(teamName);
+      const responded = `${teamRows.length}${teamTotal ? ` / ${teamTotal}` : ''}`;
+
+      function buildMemberPills(key, pillClassFn, valueTransform = (v)=>v) {
+        return teamRows.map((r, idx) => {
+          const val = txt(r[key]);
+          if (!val) return '';
+          const display = valueTransform(val);
+          const rid = txt(r[COLS.id]);
+          return `
+            <span class="mchip-card pill ${pillClassFn(val)}" title="ID: ${rid}">
+              <span>#${idx+1}</span>
+              <span>${display}</span>
+            </span>
+          `;
+        }).filter(Boolean).join('');
+      }
+
+      const ratingPills = teamRows.map((r, idx) => {
+        const n = parseRating(r[COLS.rating]);
+        if (n == null) return '';
+        const rid = txt(r[COLS.id]);
+        return `
+          <span class="mchip-card pill ${pillClassForRating(n)}" title="ID: ${rid}">
+            <span>#${idx+1}</span>
+            <span>${n.toFixed(1)}</span>
+          </span>
+        `;
+      }).join('');
+
+      const continuePills = buildMemberPills(COLS.continue, pillClassForContinue);
+      const adoptionPills = buildMemberPills(COLS.adoption, pillClassForAdoption);
+      const followupPills = buildMemberPills(COLS.followup, pillClassForFollowup);
+
+      const division = txt(teamRows[0][COLS.division]) || '—';
+
+      const card = el(`
+        <div class="team-card">
+          <div class="team-header">
+            <div class="team-title">
+              <div class="team-name">${teamName}</div>
+              <div class="responded-note">(${responded} responded)</div>
+            </div>
+            <div class="header-right">
+              <div class="header-division">
+                <div class="division-pill" title="Division">${division}</div>
+              </div>
+              <div class="header-problem">
+                ${problemPill(teamName)}
+              </div>
+            </div>
+          </div>
+
+          <div class="stack">
+            <div class="row">
+              <div class="label">Rating</div>
+              <div class="pill-group">${ratingPills || '<span class="pill pill-soft">—</span>'}</div>
+            </div>
+            <div class="row">
+              <div class="label">Continue Beyond Sprint</div>
+              <div class="pill-group">${continuePills || '<span class="pill pill-soft">—</span>'}</div>
+            </div>
+            <div class="row">
+              <div class="label">Adoption Level</div>
+              <div class="pill-group">${adoptionPills || '<span class="pill pill-soft">—</span>'}</div>
+            </div>
+            <div class="row">
+              <div class="label">Follow-up Interest</div>
+              <div class="pill-group">${followupPills || '<span class="pill pill-soft">—</span>'}</div>
+            </div>
+          </div>
+        </div>
+      `);
+
+      teamCards.appendChild(card);
+    });
+
+    // Tables
+    const tbodyExp = document.getElementById('table-experience');
+    const tbodyFuture = document.getElementById('table-future');
+    const tbodySupport = document.getElementById('table-support');
+
+    const sortedEntries = sortedTeams; // already sorted array of [team, rows]
+
+    function groupAnswersWithMembers(teamRows, key) {
+      const items = [];
+      teamRows.forEach((r, idx) => {
+        const raw = txt(r[key]);
+        if (!raw) return;
+        const parts = raw.split('\n').map(s => txt(s)).filter(Boolean);
+        parts.forEach(p => items.push({ answer: p, idx, id: txt(r[COLS.id]) }));
+      });
+      const map = new Map();
+      for (const it of items) {
+        if (!map.has(it.answer)) map.set(it.answer, []);
+        map.get(it.answer).push(it);
+      }
+      return map;
+    }
+
+    function respondentLegend(teamRows) {
+      return teamRows.map((r, idx) => {
+        const color = memberColor(idx);
+        const textColor = getTextColor(color);
+        const rid = txt(r[COLS.id]);
+        return `<span title="ID ${rid}" class="mchip" style="background:${color}; color:${textColor};">#${idx+1}</span>`;
+      }).join(' ');
+    }
+
+    function renderAnswerCell(teamRows, key) {
+      const grouped = groupAnswersWithMembers(teamRows, key);
+      return [...grouped.entries()].map(([answer, members]) => {
+        const chips = members.map(({idx, id}) => {
+          const color = memberColor(idx);
+          const textColor = getTextColor(color);
+          return `<span class="mchip" title="ID: ${id}" style="background:${color}; color:${textColor};">#${idx+1}</span>`;
+        }).join(' ');
+        return `<div class="answer-block"><div class="text">${answer}</div><div style="margin-top:4px;">${chips}</div></div>`;
+      }).join('');
+    }
+
+    function teamMetaCell(teamName, teamRows) {
+      const division = txt(teamRows[0][COLS.division]) || '—';
+      return `
+        <strong>${teamName}</strong><br/>
+        <span style="color:#6b7280; font-size:0.85rem;">respondents: ${teamRows.length}${TEAM_HEADCOUNT.has(teamName) ? ` / ${TEAM_HEADCOUNT.get(teamName)}` : ''}</span><br/>
+        <div style="margin-top:6px;">${respondentLegend(teamRows)}</div>
+        ${divisionPill(division)}
+        ${problemPill(teamName)}
+      `;
+    }
+
+    tbodyExp.innerHTML = sortedEntries.map(([team, teamRows]) => `
+      <tr>
+        <td>${teamMetaCell(team, teamRows)}</td>
+        <td>${renderAnswerCell(teamRows, COLS.worked)}</td>
+        <td>${renderAnswerCell(teamRows, COLS.challenge)}</td>
+        <td>${renderAnswerCell(teamRows, COLS.better)}</td>
+      </tr>
+    `).join('');
+
+    tbodyFuture.innerHTML = sortedEntries.map(([team, teamRows]) => `
+      <tr>
+        <td>${teamMetaCell(team, teamRows)}</td>
+        <td>${renderAnswerCell(teamRows, COLS.vision)}</td>
+        <td>${renderAnswerCell(teamRows, COLS.steps)}</td>
+        <td>${renderAnswerCell(teamRows, COLS.timeline)}</td>
+      </tr>
+    `).join('');
+
+    tbodySupport.innerHTML = sortedEntries.map(([team, teamRows]) => `
+      <tr>
+        <td>${teamMetaCell(team, teamRows)}</td>
+        <td>${renderAnswerCell(teamRows, COLS.support)}</td>
+        <td>${renderAnswerCell(teamRows, COLS.barriers)}</td>
+      </tr>
+    `).join('');
+  }
+
+  // Reload render when filters change
+  function wireFilterEvents() {
+    const selDiv = document.getElementById('filter-division');
+    const selProb = document.getElementById('filter-problem');
+
+    selDiv.addEventListener('change', () => {
+      CURRENT_DIVISION = selDiv.value;
+      // Optionally, constrain Problem options to those present within selected Division
+      render(RAW_ROWS);
+    });
+    selProb.addEventListener('change', () => {
+      CURRENT_PROBLEM = selProb.value;
+      render(RAW_ROWS);
+    });
+  }
+
+  // Load CSV (trim any preface before header)
+  fetch(CSV_URL)
+    .then(resp => resp.ok ? resp.text() : Promise.reject(new Error(`HTTP ${resp.status}`)))
+    .then(text => {
+      const lines = text.split(/\r?\n/);
+      const headerIdx = lines.findIndex(l => l.split(',')[0].trim() === HEADER_START);
+      if (headerIdx === -1) throw new Error('Could not find header row starting with "Response ID".');
+      const trimmed = lines.slice(headerIdx).join('\n');
+      Papa.parse(trimmed, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          wireFilterEvents();
+          render(results.data);
+        },
+        error: (err) => { console.error('CSV parse error:', err); alert('Failed to parse CSV.'); }
+      });
+    })
+    .catch(err => { console.error('CSV load error:', err); alert('Failed to load CSV. Check path/CORS.'); });
+})();
+</script>
+  <script>
+/*
+  SCG Dashboard Chatbot
+  - Builds context from the same parsed CSV rows (RAW_ROWS) already in your page
+  - Answers questions grounded in that data
+  - OpenAI call: choose either direct client call (testing) or secure proxy (production)
+
+  IMPORTANT:
+  - For production, set USE_SECURE_PROXY = true and implement the /chat endpoint as shown below.
+  - For quick local testing, set USE_SECURE_PROXY = false and put your OpenAI API key in OPENAI_API_KEY (not recommended beyond testing).
+*/
+
+const USE_SECURE_PROXY = true;  // true = use your backend at /chat (recommended). false = browser calls OpenAI directly (testing only).
+const OPENAI_MODEL = "gpt-4o-mini"; // small+fast; you can change to "gpt-4o" for higher quality
+
+// 1) Minimal UI
+(function initChatbotUI() {
+  const root = document.getElementById('chatbot-root');
+  root.innerHTML = `
+    <style>
+      .scg-chat-btn {
+        position: fixed; right: 20px; bottom: 20px; width: 56px; height: 56px;
+        border-radius: 50%; background: linear-gradient(135deg,#4facfe,#00f2fe);
+        box-shadow: 0 10px 24px rgba(0,0,0,0.15); color: white; border: none;
+        cursor: pointer; font-size: 22px; display:flex; align-items:center; justify-content:center; z-index: 999999;
+      }
+      .scg-chat-panel {
+        position: fixed; right: 20px; bottom: 88px; width: 360px; max-height: 60vh;
+        background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.18); overflow: hidden; display: none; z-index: 999999;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        color: #0f172a;
+      }
+      .scg-chat-header {
+        padding: 12px 14px; background: linear-gradient(135deg,#667eea,#764ba2); color: #fff; font-weight: 700;
+        display:flex; align-items:center; justify-content: space-between;
+      }
+      .scg-chat-body {
+        padding: 12px; overflow: auto; max-height: 46vh; background: #fafafa;
+      }
+      .scg-chat-msg { margin: 8px 0; }
+      .scg-chat-msg.user { text-align: right; }
+      .scg-bubble {
+        display: inline-block; padding: 8px 10px; border-radius: 10px; max-width: 85%; line-height: 1.35;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      }
+      .scg-bubble.user { background: #e0f2fe; color: #075985; }
+      .scg-bubble.bot  { background: #f1f5f9; color: #0f172a; }
+      .scg-chat-input {
+        display:flex; gap: 8px; padding: 10px; border-top: 1px solid #e5e7eb; background:#fff;
+      }
+      .scg-chat-input input {
+        flex:1; padding: 10px; border-radius: 10px; border: 1px solid #e5e7eb; outline: none;
+      }
+      .scg-chat-input button {
+        background: #4facfe; color: #fff; border: none; border-radius: 10px; padding: 10px 12px; cursor: pointer;
+      }
+      .scg-close {
+        background: transparent; color: #fff; border: none; font-size: 18px; cursor: pointer;
+      }
+      .scg-note { font-size: 12px; color: #6b7280; margin-top: 4px; }
+    /* Embedded mode - hide outer container and header */
+    body.embedded .dashboard-container { background: transparent; box-shadow: none; border-radius: 0; }
+    body.embedded .header { display: none; }
+    body.embedded body { background: transparent; padding: 0; }
+    </style>
+    <button class="scg-chat-btn" title="Ask about this dashboard">💬</button>
+    <div class="scg-chat-panel" role="dialog" aria-label="SCG AI Chat">
+      <div class="scg-chat-header">
+        <div>SCG AI Chat</div>
+        <button class="scg-close" title="Close">✕</button>
+      </div>
+      <div class="scg-chat-body" id="scg-chat-body">
+        <div class="scg-chat-msg">
+          <div class="scg-bubble bot">
+            Hi! Ask me anything about this dashboard data. For example:
+            <div class="scg-note">• What’s the average rating in Procurement?<br/>• Which teams plan to continue beyond the sprint?<br/>• Summarise top challenges and suggestions.</div>
+          </div>
+        </div>
+      </div>
+      <div class="scg-chat-input">
+        <input id="scg-chat-input" placeholder="Type your question..." />
+        <button id="scg-chat-send">Send</button>
+      </div>
+    </div>
+  `;
+
+  const btn = root.querySelector('.scg-chat-btn');
+  const panel = root.querySelector('.scg-chat-panel');
+  const closeBtn = root.querySelector('.scg-close');
+  btn.addEventListener('click', ()=> { panel.style.display = panel.style.display==='block' ? 'none' : 'block'; });
+  closeBtn.addEventListener('click', ()=> panel.style.display='none');
+
+  const input = root.querySelector('#scg-chat-input');
+  const sendBtn = root.querySelector('#scg-chat-send');
+  sendBtn.addEventListener('click', onSend);
+  input.addEventListener('keydown', (e)=> { if (e.key==='Enter') onSend(); });
+
+  function appendMsg(role, text) {
+    const body = root.querySelector('#scg-chat-body');
+    const msg = document.createElement('div');
+    msg.className = 'scg-chat-msg ' + (role==='user' ? 'user' : 'bot');
+    const bubble = document.createElement('div');
+    bubble.className = 'scg-bubble ' + (role==='user' ? 'user' : 'bot');
+    bubble.textContent = text;
+    msg.appendChild(bubble);
+    body.appendChild(msg);
+    body.scrollTop = body.scrollHeight;
+    return bubble;
+  }
+
+  // 2) Build the in-memory context from RAW_ROWS (which your page sets when CSV loads)
+  function getContextSlices() {
+    // If your data hasn’t loaded yet, return empty
+    if (!window.RAW_ROWS || !Array.isArray(window.RAW_ROWS) || !window.RAW_ROWS.length) return [];
+
+    const COLS = window.COLS || {};
+    const rows = window.RAW_ROWS;
+
+    // Create concise per-row slices to keep prompt size small but useful
+    const slices = rows.map(r => {
+      const o = {
+        team: (r[COLS.team] || '').trim(),
+        division: (r[COLS.division] || '').trim(),
+        rating: (r[COLS.rating] || '').toString().trim(),
+        adoption: (r[COLS.adoption] || '').trim(),
+        continue: (r[COLS.continue] || '').trim(),
+        worked: (r[COLS.worked] || '').trim(),
+        challenge: (r[COLS.challenge] || '').trim(),
+        better: (r[COLS.better] || '').trim(),
+        vision: (r[COLS.vision] || '').trim(),
+        steps: (r[COLS.steps] || '').trim(),
+        timeline: (r[COLS.timeline] || '').trim(),
+        support: (r[COLS.support] || '').trim(),
+        barriers: (r[COLS.barriers] || '').trim()
+      };
+      return JSON.stringify(o);
+    });
+
+    // Cap to avoid hitting token limits; adjust as needed
+    const MAX_SLICES = 300;
+    return slices.slice(0, MAX_SLICES);
+  }
+
+  // 3) Simple retrieval: pick top-N relevant slices by keyword scoring
+  function retrieveRelevantSlices(question, slices, topN=30) {
+    const q = question.toLowerCase();
+    const score = (s) => {
+      // naive scoring by field hints
+      let sc = 0;
+      const add = (w, v=1) => { if (q.includes(w)) sc += v; };
+      add('rating', 2);
+      add('average', 1);
+      add('continue', 2);
+      add('adoption', 2);
+      add('division', 1);
+      add('procurement', 3);
+      add('finance', 3);
+      add('org excellence', 3);
+      add('digital governance', 3);
+      add('challenge', 2);
+      add('worked', 1);
+      add('suggestion', 1);
+      add('support', 1);
+      add('barrier', 1);
+      // basic keyword overlap
+      const lc = s.toLowerCase();
+      const tokens = q.split(/\W+/).filter(Boolean);
+      tokens.forEach(t => { if (lc.includes(t)) sc += 0.2; });
+      return sc;
+    };
+    return slices
+      .map(s => ({ s, sc: score(s) }))
+      .sort((a,b)=>b.sc - a.sc)
+      .slice(0, topN)
+      .map(x => x.s);
+  }
+
+  async function callOpenAI(messages, abortSignal) {
+    if (!USE_SECURE_PROXY) {
+      if (!OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY for testing mode.");
+      // Direct client call (testing only)
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + OPENAI_API_KEY
+        },
+        body: JSON.stringify({
+          model: OPENAI_MODEL,
+          messages,
+          temperature: 0.2
+        }),
+        signal: abortSignal
+      });
+      if (!res.ok) throw new Error("OpenAI error: " + res.status);
+      const data = await res.json();
+      return data.choices?.[0]?.message?.content || "No response.";
+    } else {
+      // Secure proxy call to your backend
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ model: OPENAI_MODEL, messages }),
+        signal: abortSignal
+      });
+      if (!res.ok) throw new Error("Proxy error: " + res.status);
+      const data = await res.json();
+      return data.answer || "No response.";
+    }
+  }
+
+  let currentAbort = null;
+
+  async function onSend() {
+    const inputEl = root.querySelector('#scg-chat-input');
+    const q = (inputEl.value || "").trim();
+    if (!q) return;
+
+    // Show user message
+    appendMsg('user', q);
+    inputEl.value = '';
+
+    // Build prompt with small retrieval context
+    const slices = getContextSlices();
+    const relevant = retrieveRelevantSlices(q, slices, 40);
+
+    const systemPrompt = `
+You are a helpful analyst for the "SCG AI-First Sprint 1 Feedback Dashboard".
+Answer strictly based on the provided JSONL context slices from the dashboard's CSV data.
+If the question asks for numbers (averages, counts, rates), derive them logically from the slices or explain limitations.
+If information is insufficient, say so briefly.
+Be concise and structured. If a division/team is mentioned, filter to those entities.
+`;
+
+    const userPrompt = `
+Question: ${q}
+
+Context slices (JSONL):
+${relevant.join('\n')}
+`;
+
+    const thinkingBubble = appendMsg('bot', 'Thinking...');
+    const controller = new AbortController();
+    currentAbort?.abort();
+    currentAbort = controller;
+
+    try {
+      const answer = await callOpenAI(
+        [
+          { role: "system", content: systemPrompt.trim() },
+          { role: "user", content: userPrompt.trim() }
+        ],
+        controller.signal
+      );
+      thinkingBubble.textContent = answer.trim();
+    } catch (e) {
+      thinkingBubble.textContent = "Sorry, I couldn’t get an answer right now.";
+      console.error(e);
+    }
+  }
+})();
+
+</script>
+</body>
+</html>
