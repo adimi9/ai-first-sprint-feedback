@@ -5,209 +5,181 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SCG AI-First Sprint Feedback Dashboard</title>
   <style>
-    * { 
-      margin: 0; 
-      padding: 0; 
-      box-sizing: border-box; 
-    }
-    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
+      padding: 20px;
       color: #111827;
-      overflow: hidden;
     }
-    
-    .main-container {
-      max-width: 1600px;
+    .dashboard-container {
+      max-width: 1400px;
       margin: 0 auto;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      backdrop-filter: blur(10px);
     }
-    
     .header {
       background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-      padding: 20px 24px;
+      padding: 24px;
       text-align: center;
       color: white;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      z-index: 10;
     }
-    
     .header h1 {
-      font-size: 2rem; 
-      font-weight: 800; 
-      margin-bottom: 4px;
+      font-size: 2.1rem; font-weight: 800; margin-bottom: 6px;
       text-shadow: 0 2px 4px rgba(0,0,0,0.12);
     }
-    
-    .header p { 
-      font-size: 0.95rem; 
-      opacity: 0.95; 
-    }
-    
-    /* Sprint Switcher */
+    .header p { font-size: 1rem; opacity: 0.95; }
+    .content { padding: 22px; }
+
+    /* Sprint Switcher - positioned above metrics */
     .sprint-switcher {
       display: flex;
       justify-content: center;
       gap: 12px;
-      padding: 16px 24px;
-      background: rgba(255, 255, 255, 0.95);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      z-index: 10;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
     }
-    
-    .sprint-btn {
+    .sprint-switcher-btn {
       background: white;
       border: 2px solid #e5e7eb;
-      padding: 12px 32px;
+      padding: 12px 28px;
       border-radius: 12px;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 700;
       color: #4b5563;
       cursor: pointer;
       transition: all 0.2s ease;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
-    
-    .sprint-btn:hover {
+    .sprint-switcher-btn:hover {
       background: #f9fafb;
       border-color: #4facfe;
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-    
-    .sprint-btn.active {
+    .sprint-switcher-btn.active {
       background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
       color: white;
       border-color: #4facfe;
       box-shadow: 0 4px 16px rgba(79, 172, 254, 0.3);
     }
-    
-    /* Content Area */
-    .content-area {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-      background: rgba(255, 255, 255, 0.95);
-      margin: 0 20px 20px 20px;
-      border-radius: 0 0 20px 20px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    }
-    
-    .sprint-content {
+
+    /* Sprint content containers */
+    .sprint-content-wrapper {
       display: none;
-      width: 100%;
-      height: 100%;
     }
-    
-    .sprint-content.active {
+    .sprint-content-wrapper.active {
       display: block;
     }
     
-    .sprint-content iframe {
+    /* Iframe styling */
+    .sprint-iframe {
       width: 100%;
-      height: 100%;
       border: none;
+      min-height: 800px;
+      background: transparent;
     }
-    
-    /* Loading indicator */
-    .loading {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100%;
-      font-size: 1.2rem;
-      color: #4b5563;
-    }
-    
+
     @media (max-width: 768px) {
-      .header h1 { 
-        font-size: 1.5rem; 
-      }
-      
-      .sprint-switcher { 
-        flex-direction: column; 
-        gap: 8px; 
-        padding: 12px;
-      }
-      
-      .sprint-btn { 
-        padding: 10px 20px; 
-        font-size: 0.9rem;
-      }
-      
-      .content-area {
-        margin: 0 10px 10px 10px;
-      }
+      .dashboard-container { margin: 10px; border-radius: 15px; }
+      .content { padding: 18px; }
+      .header { padding: 20px; }
+      .header h1 { font-size: 1.8rem; }
+      .sprint-switcher { gap: 8px; }
+      .sprint-switcher-btn { padding: 10px 20px; font-size: 0.85rem; }
     }
   </style>
 </head>
 <body>
-  <div class="main-container">
-    <div class="header">
-      <h1>🚀 SCG AI-First Sprint Feedback Dashboard</h1>
-      <p>Comprehensive analysis of team experiences and outcomes across all sprints</p>
-    </div>
-
-    <!-- Sprint Switcher -->
-    <div class="sprint-switcher">
-      <button class="sprint-btn active" onclick="switchSprint(1)">Sprint 1</button>
-      <button class="sprint-btn" onclick="switchSprint(2)">Sprint 2</button>
-      <button class="sprint-btn" onclick="switchSprint(3)">Sprint 3</button>
-    </div>
-
-    <!-- Content Area -->
-    <div class="content-area">
-      <!-- Sprint 1 Content -->
-      <div id="sprint-1" class="sprint-content active">
-        <iframe id="sprint-1-frame" src="sprint1.html"></iframe>
-      </div>
-
-      <!-- Sprint 2 Content -->
-      <div id="sprint-2" class="sprint-content">
-        <iframe id="sprint-2-frame"></iframe>
-      </div>
-
-      <!-- Sprint 3 Content -->
-      <div id="sprint-3" class="sprint-content">
-        <iframe id="sprint-3-frame"></iframe>
-      </div>
-    </div>
+<div class="dashboard-container">
+  <div class="header">
+    <h1>🚀 SCG AI-First Sprint Feedback Dashboard</h1>
+    <p>Comprehensive analysis of team experiences and outcomes</p>
   </div>
 
-  <script>
-    // Sprint switcher logic
-    function switchSprint(sprintNumber) {
-      // Hide all sprint contents
-      document.querySelectorAll('.sprint-content').forEach(content => {
-        content.classList.remove('active');
-      });
-      
-      // Remove active class from all buttons
-      document.querySelectorAll('.sprint-btn').forEach(btn => {
-        btn.classList.remove('active');
-      });
-      
-      // Show selected sprint content
-      document.getElementById('sprint-' + sprintNumber).classList.add('active');
-      
-      // Add active class to clicked button
-      event.target.classList.add('active');
-      
-      // Load iframe content if not already loaded
-      const iframe = document.getElementById('sprint-' + sprintNumber + '-frame');
-      if (!iframe.src) {
-        const sprintFiles = {
-          1: 'sprint1.html',
-          2: 'sprint2.html',
-          3: 'sprint3.html'
-        };
-        iframe.src = sprintFiles[sprintNumber];
-      }
+  <div class="content">
+    <!-- Sprint Switcher (above metrics) -->
+    <div class="sprint-switcher">
+      <button class="sprint-switcher-btn active" onclick="switchToSprint(1)">Sprint 1</button>
+      <button class="sprint-switcher-btn" onclick="switchToSprint(2)">Sprint 2</button>
+      <button class="sprint-switcher-btn" onclick="switchToSprint(3)">Sprint 3</button>
+    </div>
+
+    <!-- Sprint 1 Content -->
+    <div id="sprint-content-1" class="sprint-content-wrapper active">
+      <iframe id="sprint-1-frame" src="sprint1-embedded.html" class="sprint-iframe" onload="resizeIframe(this)"></iframe>
+    </div>
+
+    <!-- Sprint 2 Content -->
+    <div id="sprint-content-2" class="sprint-content-wrapper">
+      <iframe id="sprint-2-frame" src="" class="sprint-iframe" onload="resizeIframe(this)"></iframe>
+    </div>
+
+    <!-- Sprint 3 Content -->
+    <div id="sprint-content-3" class="sprint-content-wrapper">
+      <iframe id="sprint-3-frame" src="" class="sprint-iframe" onload="resizeIframe(this)"></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+// Sprint switcher function
+function switchToSprint(sprintNum) {
+  // Hide all sprint content
+  document.querySelectorAll('.sprint-content-wrapper').forEach(wrapper => {
+    wrapper.classList.remove('active');
+  });
+  
+  // Remove active class from all buttons
+  document.querySelectorAll('.sprint-switcher-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  // Show selected sprint content
+  document.getElementById('sprint-content-' + sprintNum).classList.add('active');
+  event.target.classList.add('active');
+  
+  // Load iframe if not already loaded
+  const iframe = document.getElementById('sprint-' + sprintNum + '-frame');
+  if (!iframe.src || iframe.src === window.location.href) {
+    iframe.src = 'sprint' + sprintNum + '-embedded.html';
+  }
+}
+
+// Resize iframe to fit content
+function resizeIframe(iframe) {
+  try {
+    // Try to access iframe content height
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+    const height = iframeDoc.documentElement.scrollHeight;
+    iframe.style.height = (height + 50) + 'px';
+  } catch (e) {
+    // If cross-origin, use a default height
+    iframe.style.height = '1200px';
+  }
+}
+
+// Adjust iframe heights on window resize
+window.addEventListener('resize', function() {
+  document.querySelectorAll('.sprint-iframe').forEach(iframe => {
+    if (iframe.src) {
+      resizeIframe(iframe);
     }
-  </script>
+  });
+});
+
+// Re-resize iframes periodically to handle dynamic content
+setInterval(function() {
+  document.querySelectorAll('.sprint-iframe').forEach(iframe => {
+    if (iframe.src && iframe.parentElement.classList.contains('active')) {
+      resizeIframe(iframe);
+    }
+  });
+}, 1000);
+</script>
 </body>
 </html>
